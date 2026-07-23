@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Hanken Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-surface-dim: #0b1326;
+  --color-surface: #0b1326;
+  --color-surface-bright: #31394d;
+  --color-surface-lowest: #060e20;
+  --color-surface-low: #131b2e;
+  --color-surface-container: #171f33;
+  --color-surface-high: #222a3d;
+  --color-surface-highest: #2d3449;
+  --color-surface-card: #1E293B;
+  --color-surface-border: #334155;
+
+  --color-ai-indicator: #8B5CF6;
+  --color-human-indicator: #10B981;
+  --color-warning-indicator: #F59E0B;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-body);
+    background-color: #0b1326;
+    color: #dae2fd;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headline);
+  }
+
+  code, pre, .font-mono, .label-caps {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Custom Utilities */
+.ai-gradient-text {
+  background: linear-gradient(135deg, #c0c1ff 0%, #8b5cf6 50%, #ddb7ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ai-gradient-btn {
+  background: linear-gradient(135deg, #8083ff 0%, #6f00be 100%);
+}
+
+.ai-gradient-btn:hover {
+  background: linear-gradient(135deg, #9193ff 0%, #820cd6 100%);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.glow-button {
+  box-shadow: 0 0 15px rgba(128, 131, 255, 0.25);
+}
+
+.glow-button:hover {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.5);
+}
+
+.bento-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover {
+  border-color: #475569;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1326;
+}
+::-webkit-scrollbar-thumb {
+  background: #232d42;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
