@@ -46,36 +46,41 @@ export const TextScanView: React.FC<TextScanViewProps> = ({ credits, onAnalyzeCo
     setErrorMsg('');
 
     try {
-      const response = await fetch('/api/analyze-text', {
+      const response = await fetch('/api/analyze/text', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
         body: JSON.stringify({ text: textInput }),
       });
 
       const data = await response.json();
 
-      if (data.success && data.report) {
+      if (response.ok && data.analysis) {
+        const analysis = data.analysis;
         const fullReport: TextScanReport = {
-          id: `rpt-txt-${Date.now().toString().slice(-4)}`,
+          id: `rpt-txt-${analysis.id}`,
           title: `Scan_${new Date().toLocaleTimeString().replace(/:/g, '')}.txt`,
           timestamp: 'Just now',
-          aiProbability: data.report.aiProbability ?? 85,
-          confidenceLabel: data.report.confidenceLabel ?? 'High Confidence',
-          perplexityScore: data.report.perplexityScore ?? 'Low',
-          perplexityDescription: data.report.perplexityDescription ?? 'Highly predictable word choices.',
-          burstiness: data.report.burstiness ?? 'Uniform',
-          burstinessDescription: data.report.burstinessDescription ?? 'Lack of structural variation.',
-          sentenceLength: data.report.sentenceLength ?? 'Static',
-          avgSentenceLength: data.report.avgSentenceLength ?? 'Average 14.2 words/sentence.',
-          linguisticPatternSummary: data.report.linguisticPatternSummary ?? 'The text exhibits uniform syntax and typical LLM token distributions.',
-          highlightedTags: data.report.highlightedTags ?? ['Highly Uniform', 'Low Burstiness'],
-          paragraphs: data.report.paragraphs ?? [{ text: textInput, isAi: true, reasoning: 'Analyzed content' }],
-          originalText: textInput
+          aiProbability: analysis.ai_probability * 100,
+          confidenceLabel: analysis.confidence_score,
+          perplexityScore: 'N/A', // ponytail: simple placeholder for now
+          perplexityDescription: 'N/A',
+          burstiness: 'N/A',
+          burstinessDescription: 'N/A',
+          sentenceLength: 'N/A',
+          avgSentenceLength: 'N/A',
+          linguisticPatternSummary: analysis.analysis_summary,
+          highlightedTags: [], // ponytail: simple placeholder for now
+          paragraphs: [{ text: analysis.input_content, isAi: analysis.ai_probability > 0.5, reasoning: analysis.analysis_summary }],
+          originalText: analysis.input_content
         };
 
         onAnalyzeComplete(fullReport);
       } else {
-        setErrorMsg(data.error || 'Failed to analyze text. Please try again.');
+        setErrorMsg(data.message || 'Failed to analyze text.');
       }
     } catch (err: any) {
       console.error('Text analysis request error:', err);

@@ -18,6 +18,9 @@ import { TextReportView } from './components/TextReportView';
 import { ImageReportView } from './components/ImageReportView';
 import { SettingsView } from './components/SettingsView';
 import { SupportView } from './components/SupportView';
+import { RegisterView } from './components/RegisterView';
+import { LoginView } from './components/LoginView';
+import { UserCredits } from '../types';
 
 export function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
@@ -35,42 +38,65 @@ export function App() {
 
   const [activeTextReport, setActiveTextReport] = useState<TextScanReport>(DEFAULT_TEXT_REPORT);
   const [activeImageReport, setActiveImageReport] = useState<ImageForensicReport>(DEFAULT_IMAGE_REPORT);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
-  // Navigation Handler
+  // Load token from localStorage on initial render
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      setAuthToken(token);
+    }
+  }, []);
+
+  // Save token to localStorage when it changes
+  React.useEffect(() => {
+    if (authToken) {
+      localStorage.setItem('auth_token', authToken);
+    } else {
+      localStorage.removeItem('auth_token');
+    }
+  }, [authToken]);
+
   const handleNavigate = (mode: ViewMode) => {
     setCurrentView(mode);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Text Scan Completion Handler
+  const handleLogin = (token: string) => {
+    setAuthToken(token);
+    setCurrentView('overview');
+  };
+
+  const handleRegister = (token: string) => {
+    setAuthToken(token);
+    setCurrentView('overview');
+  };
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setCurrentView('landing');
+  };
+
   const handleTextScanComplete = (report: TextScanReport) => {
-    setActiveTextReport(report);
-    
-    // Deduct credit
     setCredits((prev) => ({
       ...prev,
       used: Math.min(prev.max, prev.used + 1),
       totalDocuments: prev.totalDocuments + 1
     }));
-
+    setActiveTextReport(report);
     setCurrentView('text-report');
   };
 
-  // Image Forensic Completion Handler
   const handleImageScanComplete = (report: ImageForensicReport) => {
-    setActiveImageReport(report);
-
-    // Deduct credit
     setCredits((prev) => ({
       ...prev,
       used: Math.min(prev.max, prev.used + 1),
       totalImages: prev.totalImages + 1
     }));
-
+    setActiveImageReport(report);
     setCurrentView('image-report');
   };
 
-  // Top Up Credits Handler
   const handleTopUpCredits = (amount: number) => {
     setCredits((prev) => ({
       ...prev,
@@ -78,7 +104,6 @@ export function App() {
     }));
   };
 
-  // Toggle Pro Subscription
   const handleTogglePro = () => {
     setCredits((prev) => ({
       ...prev,
@@ -87,7 +112,6 @@ export function App() {
     }));
   };
 
-  // Export PDF trigger
   const handleExportPDF = () => {
     alert('Exporting forensic report as high-resolution PDF artifact...');
   };
@@ -111,8 +135,10 @@ export function App() {
         currentView={currentView}
         onNavigate={handleNavigate}
         credits={credits}
+        onLogout={handleLogout}
+        isAuthenticated={!!authToken}
       />
-
+      
       {/* Main Workspace Area */}
       <main className="flex-1 overflow-y-auto min-w-0">
         {currentView === 'overview' && (
@@ -122,23 +148,25 @@ export function App() {
             onSubscribe={handleTogglePro}
           />
         )}
-
+        
         {currentView === 'text-scan' && (
           <TextScanView
             credits={credits}
+            authToken={isAuthenticated ? authToken : ''}
             onAnalyzeComplete={handleTextScanComplete}
             onNavigate={handleNavigate}
           />
         )}
-
+        
         {currentView === 'image-forensic' && (
           <ImageForensicView
             credits={credits}
+            authToken={isAuthenticated ? authToken : ''}
             onAnalyzeComplete={handleImageScanComplete}
             onNavigate={handleNavigate}
           />
         )}
-
+        
         {currentView === 'text-report' && (
           <TextReportView
             report={activeTextReport}
@@ -146,7 +174,7 @@ export function App() {
             onExportPDF={handleExportPDF}
           />
         )}
-
+        
         {currentView === 'image-report' && (
           <ImageReportView
             report={activeImageReport}
@@ -154,7 +182,7 @@ export function App() {
             onDownloadReport={handleExportPDF}
           />
         )}
-
+        
         {currentView === 'settings' && (
           <SettingsView
             credits={credits}
@@ -162,7 +190,34 @@ export function App() {
             onTogglePro={handleTogglePro}
           />
         )}
-
+        
+        {currentView === 'support' && (
+          <SupportView />
+        )}
+        
+        {/* Login Screen */}
+        {currentView === 'login' && (
+          <LoginView 
+            onLogin={handleLogin} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+        
+        {currentView === 'register' && (
+          <RegisterView 
+            onRegister={handleRegister} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+        
+        {currentView === 'settings' && (
+          <SettingsView
+            credits={credits}
+            onTopUpCredits={handleTopUpCredits}
+            onTogglePro={handleTogglePro}
+          />
+        )}
+        
         {currentView === 'support' && (
           <SupportView />
         )}

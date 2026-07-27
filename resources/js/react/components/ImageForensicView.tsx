@@ -61,47 +61,48 @@ export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, o
     setErrorMsg('');
 
     try {
-      const response = await fetch('/api/analyze-image', {
+      // Need to convert dataURL to File for FormData
+      const res = await fetch(selectedImage);
+      const blob = await res.blob();
+      const file = new File([blob], imageName, { type: 'image/png' });
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/analyze/image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageBase64: selectedImage,
-          imageName: imageName,
-          mimeType: 'image/png'
-        }),
+        headers: { 
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData,
       });
 
       const data = await response.json();
 
-      if (data.success && data.report) {
-        const reportData = data.report;
+      if (response.ok && data.analysis) {
+        const analysis = data.analysis;
         const fullReport: ImageForensicReport = {
-          id: `rpt-img-${Date.now().toString().slice(-4)}`,
+          id: `rpt-img-${analysis.id}`,
           fileName: imageName,
           imageUrl: selectedImage,
           timestamp: 'Just now',
-          aiProbability: reportData.aiProbability ?? 94,
-          confidenceLabel: reportData.confidenceLabel ?? 'SYNTHETIC',
-          riskLevel: reportData.riskLevel ?? 'High Probability',
-          riskSummary: reportData.riskSummary ?? 'Strong indications of generative AI synthesis detected.',
-          findings: reportData.findings ?? DEFAULT_IMAGE_REPORT.findings,
-          analysisSummary: reportData.analysisSummary ?? DEFAULT_IMAGE_REPORT.analysisSummary,
-          heatmapRegions: reportData.heatmapRegions ?? DEFAULT_IMAGE_REPORT.heatmapRegions
+          aiProbability: analysis.ai_probability * 100,
+          confidenceLabel: analysis.confidence_score,
+          riskLevel: analysis.confidence_score,
+          riskSummary: analysis.analysis_summary,
+          findings: [],
+          analysisSummary: analysis.analysis_summary,
+          heatmapRegions: []
         };
 
         onAnalyzeComplete(fullReport);
       } else {
-        setErrorMsg(data.error || 'Image analysis failed.');
+        setErrorMsg(data.message || 'Image analysis failed.');
       }
     } catch (err) {
       console.error('Image analysis request failed:', err);
-      // Fallback
-      onAnalyzeComplete({
-        ...DEFAULT_IMAGE_REPORT,
-        id: `rpt-img-${Date.now().toString().slice(-4)}`,
-        fileName: imageName,
-        imageUrl: selectedImage
-      });
+      setErrorMsg('Network error occurred.');
     } finally {
       setIsAnalyzing(false);
     }

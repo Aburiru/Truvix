@@ -1,5 +1,7 @@
 export type ViewMode = 
   | 'landing' 
+  | 'login' 
+  | 'register'
   | 'overview' 
   | 'text-scan' 
   | 'image-forensic' 
