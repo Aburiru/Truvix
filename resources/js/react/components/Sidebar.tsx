@@ -16,9 +16,11 @@ interface SidebarProps {
   currentView: ViewMode;
   onNavigate: (mode: ViewMode) => void;
   credits: UserCredits;
+  onLogout?: () => void;
+  isAuthenticated?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, credits }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, credits, onLogout, isAuthenticated }) => {
   const navItems = [
     { id: 'overview' as ViewMode, label: 'Overview', icon: LayoutDashboard },
     { id: 'text-scan' as ViewMode, label: 'AI Text Scan', icon: FileText },
@@ -143,6 +145,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, credi
           <HelpCircle className="w-4 h-4 text-[#908fa0]" />
           <span>Support</span>
         </button>
+
+        {isAuthenticated && (
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <span>Logout</span>
+          </button>
+        )}
       </div>
     </aside>
   );

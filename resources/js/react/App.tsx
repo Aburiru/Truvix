@@ -20,7 +20,6 @@ import { SettingsView } from './components/SettingsView';
 import { SupportView } from './components/SupportView';
 import { RegisterView } from './components/RegisterView';
 import { LoginView } from './components/LoginView';
-import { UserCredits } from '../types';
 
 export function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
@@ -152,7 +151,7 @@ export function App() {
         {currentView === 'text-scan' && (
           <TextScanView
             credits={credits}
-            authToken={isAuthenticated ? authToken : ''}
+            authToken={authToken ? authToken : ''}
             onAnalyzeComplete={handleTextScanComplete}
             onNavigate={handleNavigate}
           />
@@ -161,7 +160,7 @@ export function App() {
         {currentView === 'image-forensic' && (
           <ImageForensicView
             credits={credits}
-            authToken={isAuthenticated ? authToken : ''}
+            authToken={authToken ? authToken : ''}
             onAnalyzeComplete={handleImageScanComplete}
             onNavigate={handleNavigate}
           />
@@ -208,18 +207,6 @@ export function App() {
             onRegister={handleRegister} 
             onNavigate={handleNavigate} 
           />
-        )}
-        
-        {currentView === 'settings' && (
-          <SettingsView
-            credits={credits}
-            onTopUpCredits={handleTopUpCredits}
-            onTogglePro={handleTogglePro}
-          />
-        )}
-        
-        {currentView === 'support' && (
-          <SupportView />
         )}
       </main>
     </div>
