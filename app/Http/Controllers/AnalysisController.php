@@ -75,23 +75,34 @@ class AnalysisController extends Controller
 
                 $humanProbability = 1.0 - $aiProbability;
 
-                    $summaryData = $this->getConfidenceAndSummary($aiProbability);
+                $summaryData = $this->getConfidenceAndSummary($aiProbability);
 
-                    try {
-                        $analysis = Auth::user()->analyses()->create([
-                            'type' => 'text',
-                            'input_content' => $request->input('text'),
-                            'ai_probability' => $aiProbability,
-                            'human_probability' => $humanProbability,
-                            'confidence_score' => $summaryData['confidence_score'],
-                            'analysis_summary' => $summaryData['analysis_summary'],
-                        ]);
-                    } catch (\Exception $dbException) {
-                        return response()->json([
-                            'message' => 'Error saving analysis to database.',
-                            'db_error' => $dbException->getMessage(),
-                        ], 500);
-                    }
+                try {
+                    $analysis = Auth::user()->analyses()->create([
+                        'type' => 'text',
+                        'input_content' => $request->input('text'),
+                        'ai_probability' => round($aiProbability, 2),
+                        'human_probability' => round($humanProbability, 2),
+                        'confidence_score' => $summaryData['confidence_score'],
+                        'analysis_summary' => $summaryData['analysis_summary'],
+                        'perplexity_score' => isset($data['perplexity_score']) ? round($data['perplexity_score'], 2) : null,
+                        'burstiness_score' => isset($data['burstiness_score']) ? round($data['burstiness_score'], 2) : null,
+                        'sentence_count' => $data['sentence_count'] ?? null,
+                        'average_sentence_length' => isset($data['average_sentence_length']) ? round($data['average_sentence_length'], 2) : null,
+                    ]);
+                } catch (\Exception $dbException) {
+                    return response()->json([
+                        'message' => 'Error saving analysis to database.',
+                        'db_error' => $dbException->getMessage(),
+                    ], 500);
+                }
+
+                // Format probabilities for the response
+                $analysis->ai_probability = round($analysis->ai_probability, 2);
+                $analysis->human_probability = round($analysis->human_probability, 2);
+                $analysis->perplexity_score = $analysis->perplexity_score !== null ? round($analysis->perplexity_score, 2) : null;
+                $analysis->burstiness_score = $analysis->burstiness_score !== null ? round($analysis->burstiness_score, 2) : null;
+                $analysis->average_sentence_length = $analysis->average_sentence_length !== null ? round($analysis->average_sentence_length, 2) : null;
 
                 return response()->json([
                     'message' => 'Text analysis successful',
@@ -153,11 +164,19 @@ class AnalysisController extends Controller
                     $analysis = Auth::user()->analyses()->create([
                         'type' => 'image',
                         'input_content' => $imageName,
-                        'ai_probability' => $aiProbability,
-                        'human_probability' => $humanProbability,
+                        'ai_probability' => round($aiProbability, 2),
+                        'human_probability' => round($humanProbability, 2),
                         'confidence_score' => $summaryData['confidence_score'],
-                    'analysis_summary' => $summaryData['analysis_summary'],
+                        'analysis_summary' => $summaryData['analysis_summary'],
+                        'perplexity_score' => null,
+                        'burstiness_score' => null,
+                        'sentence_count' => null,
+                        'average_sentence_length' => null,
                     ]);
+
+                // Format probabilities for the response
+                $analysis->ai_probability = round($analysis->ai_probability, 2);
+                $analysis->human_probability = round($analysis->human_probability, 2);
 
                 return response()->json([
                     'message' => 'Image analysis successful',

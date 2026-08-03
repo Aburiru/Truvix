@@ -67,12 +67,12 @@ export const TextScanView: React.FC<TextScanViewProps> = ({ credits, authToken, 
           timestamp: 'Just now',
           aiProbability: analysis.ai_probability * 100,
           confidenceLabel: analysis.confidence_score,
-          perplexityScore: 'N/A', // ponytail: simple placeholder for now
-          perplexityDescription: 'N/A',
-          burstiness: 'N/A',
-          burstinessDescription: 'N/A',
-          sentenceLength: 'N/A',
-          avgSentenceLength: 'N/A',
+          perplexityScore: analysis.perplexity_score,
+          perplexityDescription: analysis.perplexity_score !== null ? `A lower score indicates more predictable text.` : 'N/A',
+          burstiness: analysis.burstiness_score,
+          burstinessDescription: 'N/A', // Further logic needed for specific descriptions based on burstiness score
+          sentenceLength: analysis.sentence_count,
+          avgSentenceLength: analysis.average_sentence_length,
           linguisticPatternSummary: analysis.analysis_summary,
           highlightedTags: [], // ponytail: simple placeholder for now
           paragraphs: [{ text: analysis.input_content, isAi: analysis.ai_probability > 0.5, reasoning: analysis.analysis_summary }],

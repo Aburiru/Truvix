@@ -17,6 +17,10 @@ class Analysis extends Model
         'human_probability',
         'confidence_score',
         'analysis_summary',
+        'perplexity_score',
+        'burstiness_score',
+        'sentence_count',
+        'average_sentence_length',
     ];
 
     public function user()

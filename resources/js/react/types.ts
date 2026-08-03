@@ -22,12 +22,12 @@ export interface TextScanReport {
   timestamp: string;
   aiProbability: number;
   confidenceLabel: string;
-  perplexityScore: string;
+  perplexityScore: number | null;
   perplexityDescription: string;
-  burstiness: string;
+  burstiness: number | null;
   burstinessDescription: string;
-  sentenceLength: string;
-  avgSentenceLength: string;
+  sentenceLength: number | null; // Sentence Count
+  avgSentenceLength: number | null;
   linguisticPatternSummary: string;
   highlightedTags: string[];
   paragraphs: TextScanParagraph[];
