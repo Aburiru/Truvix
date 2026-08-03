@@ -50,13 +50,13 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
 
       <div className="flex items-center gap-3">
         <button 
-          onClick={() => onNavigate('overview')}
+          onClick={() => onNavigate('login')}
           className="text-[#c7c4d7] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors hidden md:block"
         >
           Log In
         </button>
         <button 
-          onClick={() => onNavigate('overview')}
+          onClick={() => onNavigate('register')}
           className="bg-[#8083ff] hover:bg-[#c0c1ff] text-[#0d0096] hover:text-[#07006c] px-5 py-2 rounded-full text-sm font-semibold transition-all glow-button flex items-center gap-1.5"
         >
           <span>Get Started</span>

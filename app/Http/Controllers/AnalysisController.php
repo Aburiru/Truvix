@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Analysis;
+use App\Helpers\Confidence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,7 @@ class AnalysisController extends Controller
         ]);
 
         try {
-            $response = Http::timeout(5)->post($this->pythonTextServiceUrl, [
+            $response = Http::timeout(15)->post($this->pythonTextServiceUrl, [
                 'text' => $request->input('text'),
             ]);
 
@@ -62,16 +63,17 @@ class AnalysisController extends Controller
                 $aiProbability = $data['ai_probability'] ?? null;
                 $humanProbability = 1.0 - $aiProbability;
 
-                $confidence = $this->getConfidenceAndSummary($aiProbability);
+                $confidenceLabel = Confidence::map($aiProbability);
+                    $summaryData = $this->getConfidenceAndSummary($aiProbability);
 
-                $analysis = Auth::user()->analyses()->create([
-                    'type' => 'text',
-                    'input_content' => $request->input('text'),
-                    'ai_probability' => $aiProbability,
-                    'human_probability' => $humanProbability,
-                    'confidence_score' => $confidence['confidence_score'],
-                    'analysis_summary' => $confidence['analysis_summary'],
-                ]);
+                    $analysis = Auth::user()->analyses()->create([
+                        'type' => 'text',
+                        'input_content' => $request->input('text'),
+                        'ai_probability' => $aiProbability,
+                        'human_probability' => $humanProbability,
+                        'confidence_score' => $confidenceLabel,
+                        'analysis_summary' => $summaryData['analysis_summary'],
+                    ]);
 
                 return response()->json([
                     'message' => 'Text analysis successful',
@@ -102,7 +104,7 @@ class AnalysisController extends Controller
             $imageName = 'images/' . Str::uuid() . '.' . $image->getClientOriginalExtension();
             Storage::disk('public')->put($imageName, file_get_contents($image->getRealPath()));
 
-            $response = Http::timeout(10)->attach(
+            $response = Http::timeout(20)->attach(
                 'image',
                 file_get_contents(Storage::disk('public')->path($imageName)),
                 $imageName
@@ -116,16 +118,17 @@ class AnalysisController extends Controller
                 $aiProbability = $data['ai_probability'] ?? null;
                 $humanProbability = 1.0 - $aiProbability;
 
-                $confidence = $this->getConfidenceAndSummary($aiProbability);
+                $confidenceLabel = Confidence::map($aiProbability);
+                    $summaryData = $this->getConfidenceAndSummary($aiProbability);
 
-                $analysis = Auth::user()->analyses()->create([
-                    'type' => 'image',
-                    'input_content' => $imageName, // Store image path/name
-                    'ai_probability' => $aiProbability,
-                    'human_probability' => $humanProbability,
-                    'confidence_score' => $confidence['confidence_score'],
-                    'analysis_summary' => $confidence['analysis_summary'],
-                ]);
+                    $analysis = Auth::user()->analyses()->create([
+                        'type' => 'image','
+                        'input_content' => $imageName,
+                        'ai_probability' => $aiProbability,
+                        'human_probability' => $humanProbability,
+                        'confidence_score' => $confidenceLabel,
+                        'analysis_summary' => $summaryData['analysis_summary'],
+                    ]);
 
                 return response()->json([
                     'message' => 'Image analysis successful',

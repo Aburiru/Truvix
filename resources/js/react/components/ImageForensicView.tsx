@@ -16,11 +16,12 @@ import { DEFAULT_IMAGE_REPORT, SAMPLE_IMAGE_URL } from '../data/sampleData';
 
 interface ImageForensicViewProps {
   credits: UserCredits;
+  authToken: string;
   onAnalyzeComplete: (report: ImageForensicReport) => void;
   onNavigate: (mode: ViewMode) => void;
 }
 
-export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, onAnalyzeComplete, onNavigate }) => {
+export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, authToken, onAnalyzeComplete, onNavigate }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string>('Uploaded_Image.png');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -60,48 +61,64 @@ export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, o
     setIsAnalyzing(true);
     setErrorMsg('');
 
-    try {
-      // Need to convert dataURL to File for FormData
-      const res = await fetch(selectedImage);
-      const blob = await res.blob();
-      const file = new File([blob], imageName, { type: 'image/png' });
+    const headers = {
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${authToken}`,
+    };
 
+    try {
+      // PRD STEP 2: Upload image first, get filename back
+      const blob = await fetch(selectedImage).then(r => r.blob());
+      const file = new File([blob], imageName, { type: blob.type || 'image/png' });
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('/api/analyze/image', {
+      const uploadRes = await fetch('/api/detect/image', {
         method: 'POST',
-        headers: { 
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
+        headers,
         body: formData,
       });
+      const uploadData = await uploadRes.json();
 
-      const data = await response.json();
-
-      if (response.ok && data.analysis) {
-        const analysis = data.analysis;
-        const fullReport: ImageForensicReport = {
-          id: `rpt-img-${analysis.id}`,
-          fileName: imageName,
-          imageUrl: selectedImage,
-          timestamp: 'Just now',
-          aiProbability: analysis.ai_probability * 100,
-          confidenceLabel: analysis.confidence_score,
-          riskLevel: analysis.confidence_score,
-          riskSummary: analysis.analysis_summary,
-          findings: [],
-          analysisSummary: analysis.analysis_summary,
-          heatmapRegions: []
-        };
-
-        onAnalyzeComplete(fullReport);
-      } else {
-        setErrorMsg(data.message || 'Image analysis failed.');
+      if (!uploadRes.ok || !uploadData.uploaded) {
+        setErrorMsg(uploadData.error || 'Upload failed.');
+        return;
       }
+
+      // PRD STEP 5: Send stored filename to process through AI service
+      const detectRes = await fetch('/api/detect/image/process', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: uploadData.filename }),
+      });
+      const detection = await detectRes.json();
+
+      if (!detectRes.ok) {
+        setErrorMsg(detection.error || 'Detection failed.');
+        return;
+      }
+
+      const fullReport: ImageForensicReport = {
+        id: `rpt-img-${detection.id}`,
+        fileName: imageName,
+        imageUrl: selectedImage,
+        timestamp: 'Just now',
+        aiProbability: (detection.ai_probability ?? 0) * 100,
+        confidenceLabel: detection.confidence_score,
+        riskLevel: detection.confidence_score,
+        riskSummary: detection.analysis_summary,
+        findings: {
+          noisePattern: { risk: 'Low Risk', title: 'Noise Pattern', description: '' },
+          metadata: { risk: 'Low Risk', title: 'Metadata', description: '' },
+          pixelArtifacts: { risk: 'Low Risk', title: 'Pixel Artifacts', description: '' },
+        },
+        analysisSummary: detection.analysis_summary,
+        heatmapRegions: [],
+      };
+
+      onAnalyzeComplete(fullReport);
     } catch (err) {
-      console.error('Image analysis request failed:', err);
+      console.error('Scan failed:', err);
       setErrorMsg('Network error occurred.');
     } finally {
       setIsAnalyzing(false);

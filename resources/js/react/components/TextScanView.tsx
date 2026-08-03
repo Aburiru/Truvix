@@ -15,11 +15,12 @@ import { SAMPLE_TEXT_AI, SAMPLE_TEXT_HUMAN } from '../data/sampleData';
 
 interface TextScanViewProps {
   credits: UserCredits;
+  authToken: string;
   onAnalyzeComplete: (report: TextScanReport) => void;
   onNavigate: (mode: ViewMode) => void;
 }
 
-export const TextScanView: React.FC<TextScanViewProps> = ({ credits, onAnalyzeComplete, onNavigate }) => {
+export const TextScanView: React.FC<TextScanViewProps> = ({ credits, authToken, onAnalyzeComplete, onNavigate }) => {
   const [textInput, setTextInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -48,10 +49,10 @@ export const TextScanView: React.FC<TextScanViewProps> = ({ credits, onAnalyzeCo
     try {
       const response = await fetch('/api/analyze/text', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({ text: textInput }),
       });

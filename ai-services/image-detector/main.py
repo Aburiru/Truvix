@@ -12,7 +12,7 @@ app = FastAPI()
 # Allow CORS for local development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost", "http://localhost:8000"], # Laravel dev server origin
+    allow_origins=["http://localhost:8000"], # Laravel dev server origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,6 +73,12 @@ async def detect_image(file: UploadFile = File(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {e}")
+
+@app.get("/health")
+def health():
+    # Check if model is loaded
+    model_loaded = image_model is not None
+    return {"status": "ok", "model_loaded": model_loaded}
 
 # To run this service:
 # 1. Install dependencies: pip install fastapi uvicorn Pillow torch torchvision
