@@ -123,7 +123,7 @@ export const TextReportView: React.FC<TextReportViewProps> = ({ report, onNaviga
             PERPLEXITY SCORE
           </div>
           <div className="font-headline font-bold text-2xl text-[#8b5cf6]">
-            {report.perplexityScore}
+            {report.perplexityScore !== null ? report.perplexityScore.toFixed(1) : 'N/A'}
           </div>
           <p className="text-xs text-[#c7c4d7]">
             {report.perplexityDescription}
@@ -135,7 +135,7 @@ export const TextReportView: React.FC<TextReportViewProps> = ({ report, onNaviga
             BURSTINESS
           </div>
           <div className="font-headline font-bold text-2xl text-[#8b5cf6]">
-            {report.burstiness}
+            {report.burstiness !== null ? report.burstiness.toFixed(1) : 'N/A'}
           </div>
           <p className="text-xs text-[#c7c4d7]">
             {report.burstinessDescription}
@@ -150,7 +150,7 @@ export const TextReportView: React.FC<TextReportViewProps> = ({ report, onNaviga
             {report.sentenceLength}
           </div>
           <p className="text-xs text-[#c7c4d7]">
-            {report.avgSentenceLength}
+            {report.avgSentenceLength !== null ? report.avgSentenceLength.toFixed(1) : 'N/A'}
           </p>
         </div>
       </div>

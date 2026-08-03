@@ -70,7 +70,11 @@ export const TextScanView: React.FC<TextScanViewProps> = ({ credits, authToken, 
           perplexityScore: analysis.perplexity_score,
           perplexityDescription: analysis.perplexity_score !== null ? `A lower score indicates more predictable text.` : 'N/A',
           burstiness: analysis.burstiness_score,
-          burstinessDescription: 'N/A', // Further logic needed for specific descriptions based on burstiness score
+          burstinessDescription: analysis.burstiness_score !== null
+            ? (analysis.burstiness_score < 0.5
+              ? 'Text shows low variation in sentence length, often found in AI-generated content.'
+              : 'Text shows high variation in sentence length, typical of human writing.')
+            : 'N/A',
           sentenceLength: analysis.sentence_count,
           avgSentenceLength: analysis.average_sentence_length,
           linguisticPatternSummary: analysis.analysis_summary,
