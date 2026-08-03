@@ -52,13 +52,13 @@ class DetectionController extends Controller
         }
 
         $filename = $request->input('filename');
-        $filePath = 'uploads/' . $filename;
+        $filePath = "uploads/{$filename}";
 
         if (!Storage::exists($filePath)) {
             return response()->json(['error' => 'Image not found.'], Response::HTTP_NOT_FOUND);
         }
 
-        $url = env('AI_DETECTION_URL', 'http://localhost:8000/detect');
+        $url = env('AI_DETECTION_URL', 'http://localhost:8000/detect/image');
 
         try {
             $resp = Http::attach('file', Storage::get($filePath), $filename)->post($url);
@@ -86,7 +86,7 @@ class DetectionController extends Controller
 
             // Build frontend-friendly response
             $response = [
-                'id'               => 'rpt-img-'.$detection->id,
+                'id' => "rpt-img-{$detection->id}",
                 'fileName'         => $filename,
                 'imageUrl'         => '', // client already has local preview
                 'timestamp'        => now()->toDateTimeString(),
@@ -129,7 +129,7 @@ class DetectionController extends Controller
     public function history(Request $request)
     {
         return response()->json(
-            Detection::where('user_id', $request->user()->id)
+            $request->user()->detections()
                 ->orderByDesc('created_at')
                 ->get()
         );

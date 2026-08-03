@@ -17,19 +17,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Define device globally
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # --- Models ---
 # Load models
 # Text model
-text_model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+text_model_name = "Hello-SimpleAI/chatgpt-detector-roberta"
 text_tokenizer = AutoTokenizer.from_pretrained(text_model_name)
-text_model = AutoModelForSequenceClassification.from_pretrained(text_model_name)
+text_model = AutoModelForSequenceClassification.from_pretrained(text_model_name).to(device)
 
 # Image model – ViT‑B/16 fine‑tuned for AI‑image detection
 image_model_name = "umm-maybe/AI-image-detector"
 image_processor = AutoImageProcessor.from_pretrained(image_model_name)
 image_model = AutoModelForImageClassification.from_pretrained(image_model_name)
 # Move to CUDA if available and use half precision to fit VRAM
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 image_model.to(device)
 image_model.eval()
 image_model = image_model.half()
@@ -43,8 +45,9 @@ async def detect_text(request: TextRequest):
     inputs = text_tokenizer(request.text, return_tensors="pt", truncation=True, max_length=512)
     with torch.no_grad():
         logits = text_model(**inputs).logits
-    ai_prob = torch.softmax(logits, dim=1)[:, 0].item()
-    return {"ai_probability": ai_prob, "confidence": "high" if ai_prob > 0.8 else "low", "prediction": "AI" if ai_prob > 0.5 else "Human"}
+    # Model outputs: 0 = Human, 1 = AI
+    ai_prob = torch.softmax(logits, dim=1)[:, 1].item()
+    return {"ai_probability": ai_prob, "confidence": "high" if ai_prob >= 0.7 else "low", "prediction": "AI Generated" if ai_prob >= 0.5 else "Human"}
 
 @app.post("/detect/image")
 async def detect_image(file: UploadFile = File(...)):

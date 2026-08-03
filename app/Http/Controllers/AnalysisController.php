@@ -23,6 +23,9 @@ class AnalysisController extends Controller
 
     private function getConfidenceAndSummary($probability)
     {
+        $confidence_score = '';
+        $analysis_summary = '';
+
         if ($probability === null) {
             return [
                 'confidence_score' => 'N/A',
@@ -30,18 +33,15 @@ class AnalysisController extends Controller
             ];
         }
 
-        $confidenceScore = '';
-        $analysisSummary = '';
-
         if ($probability < 0.3) {
-            $confidenceScore = 'Low AI Confidence';
-            $analysisSummary = 'This content is highly likely human-generated.';
+            $confidence_score = 'Low AI Confidence';
+            $analysis_summary = 'This content is highly likely human-generated.';
         } elseif ($probability >= 0.3 && $probability < 0.7) {
-            $confidenceScore = 'Moderate AI Confidence';
-            $analysisSummary = 'This content shows some characteristics of AI-generation, but is likely human-generated.';
+            $confidence_score = 'Moderate AI Confidence';
+            $analysis_summary = 'This content shows some characteristics of AI-generation, but is likely human-generated.';
         } else {
-            $confidenceScore = 'High AI Confidence';
-            $analysisSummary = 'This content is highly likely AI-generated.';
+            $confidence_score = 'High AI Confidence';
+            $analysis_summary = 'This content is highly likely AI-generated.';
         }
 
         return compact('confidence_score', 'analysis_summary');
@@ -54,6 +54,10 @@ class AnalysisController extends Controller
         ]);
 
         try {
+            if (!Auth::check()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
             $response = Http::timeout(15)->post($this->pythonTextServiceUrl, [
                 'text' => $request->input('text'),
             ]);
@@ -61,19 +65,33 @@ class AnalysisController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 $aiProbability = $data['ai_probability'] ?? null;
+
+                if ($aiProbability === null) {
+                    return response()->json([
+                        'message' => 'AI probability not found in AI text service response.',
+                        'response_data' => $data,
+                    ], 500);
+                }
+
                 $humanProbability = 1.0 - $aiProbability;
 
-                $confidenceLabel = Confidence::map($aiProbability);
                     $summaryData = $this->getConfidenceAndSummary($aiProbability);
 
-                    $analysis = Auth::user()->analyses()->create([
-                        'type' => 'text',
-                        'input_content' => $request->input('text'),
-                        'ai_probability' => $aiProbability,
-                        'human_probability' => $humanProbability,
-                        'confidence_score' => $confidenceLabel,
-                        'analysis_summary' => $summaryData['analysis_summary'],
-                    ]);
+                    try {
+                        $analysis = Auth::user()->analyses()->create([
+                            'type' => 'text',
+                            'input_content' => $request->input('text'),
+                            'ai_probability' => $aiProbability,
+                            'human_probability' => $humanProbability,
+                            'confidence_score' => $summaryData['confidence_score'],
+                            'analysis_summary' => $summaryData['analysis_summary'],
+                        ]);
+                    } catch (\Exception $dbException) {
+                        return response()->json([
+                            'message' => 'Error saving analysis to database.',
+                            'db_error' => $dbException->getMessage(),
+                        ], 500);
+                    }
 
                 return response()->json([
                     'message' => 'Text analysis successful',
@@ -113,21 +131,32 @@ class AnalysisController extends Controller
             // Clean up temporary image file after sending
             Storage::disk('public')->delete($imageName);
 
+            if (!Auth::check()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
             if ($response->successful()) {
                 $data = $response->json();
                 $aiProbability = $data['ai_probability'] ?? null;
+
+                if ($aiProbability === null) {
+                    return response()->json([
+                        'message' => 'AI probability not found in AI image service response.',
+                        'response_data' => $data,
+                    ], 500);
+                }
+
                 $humanProbability = 1.0 - $aiProbability;
 
-                $confidenceLabel = Confidence::map($aiProbability);
                     $summaryData = $this->getConfidenceAndSummary($aiProbability);
 
                     $analysis = Auth::user()->analyses()->create([
-                        'type' => 'image','
+                        'type' => 'image',
                         'input_content' => $imageName,
                         'ai_probability' => $aiProbability,
                         'human_probability' => $humanProbability,
-                        'confidence_score' => $confidenceLabel,
-                        'analysis_summary' => $summaryData['analysis_summary'],
+                        'confidence_score' => $summaryData['confidence_score'],
+                    'analysis_summary' => $summaryData['analysis_summary'],
                     ]);
 
                 return response()->json([
