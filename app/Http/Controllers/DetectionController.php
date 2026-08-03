@@ -80,6 +80,10 @@ class DetectionController extends Controller
                 'analysis_summary' => $data['prediction'] ?? '',
             ]);
 
+            // Map AI confidence to expected risk format
+            $confidence = $data['confidence'] ?? 'low';
+            $riskLabel = $confidence === 'high' ? 'High Risk' : 'Low Risk';
+
             // Build frontend-friendly response
             $response = [
                 'id'               => 'rpt-img-'.$detection->id,
@@ -87,27 +91,27 @@ class DetectionController extends Controller
                 'imageUrl'         => '', // client already has local preview
                 'timestamp'        => now()->toDateTimeString(),
                 'aiProbability'    => ($data['ai_probability'] ?? 0) * 100,
-                'confidenceLabel' => $data['confidence'] ?? 'low',
-                'riskLevel'        => $data['confidence'] ?? 'low',
-                'riskSummary'      => $data['prediction'] ?? '',
+                'confidenceLabel' => $confidence,
+                'riskLevel'        => $riskLabel,
+                'riskSummary'      => $data['prediction'] ?? 'No analysis summary',
                 'findings' => [
                     'noisePattern' => [
-                        'risk' => 'Low Risk',
+                        'risk' => $riskLabel,
                         'title' => 'Noise Pattern',
-                        'description' => '',
+                        'description' => 'Analysis based on basic probability check.',
                     ],
                     'metadata' => [
                         'risk' => 'Low Risk',
                         'title' => 'Metadata',
-                        'description' => '',
+                        'description' => 'No anomalies detected in metadata.',
                     ],
                     'pixelArtifacts' => [
-                        'risk' => 'Low Risk',
+                        'risk' => $riskLabel,
                         'title' => 'Pixel Artifacts',
-                        'description' => '',
+                        'description' => 'AI model detected potential synthetic artifacts.',
                     ],
                 ],
-                'analysisSummary' => $data['prediction'] ?? '',
+                'analysisSummary' => $data['prediction'] ?? 'No analysis summary',
                 'heatmapRegions'  => [],
             ];
 

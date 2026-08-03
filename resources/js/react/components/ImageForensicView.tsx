@@ -91,32 +91,16 @@ export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, a
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: uploadData.filename }),
       });
-      const detection = await detectRes.json();
+      const reportFromServer = await detectRes.json();
 
-      if (!detectRes.ok) {
-        setErrorMsg(detection.error || 'Detection failed.');
-        return;
-      }
-
-      const fullReport: ImageForensicReport = {
-        id: `rpt-img-${detection.id}`,
+      const finalReport: ImageForensicReport = {
+        ...reportFromServer,
         fileName: imageName,
         imageUrl: selectedImage,
         timestamp: 'Just now',
-        aiProbability: (detection.ai_probability ?? 0) * 100,
-        confidenceLabel: detection.confidence_score,
-        riskLevel: detection.confidence_score,
-        riskSummary: detection.analysis_summary,
-        findings: {
-          noisePattern: { risk: 'Low Risk', title: 'Noise Pattern', description: '' },
-          metadata: { risk: 'Low Risk', title: 'Metadata', description: '' },
-          pixelArtifacts: { risk: 'Low Risk', title: 'Pixel Artifacts', description: '' },
-        },
-        analysisSummary: detection.analysis_summary,
-        heatmapRegions: [],
       };
 
-      onAnalyzeComplete(fullReport);
+      onAnalyzeComplete(finalReport);
     } catch (err) {
       console.error('Scan failed:', err);
       setErrorMsg('Network error occurred.');
