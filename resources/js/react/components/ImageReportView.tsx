@@ -159,7 +159,7 @@ export const ImageReportView: React.FC<ImageReportViewProps> = ({ report, onNavi
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="font-headline font-bold text-4xl text-white">
-                  {report.aiProbability}<span className="text-xl">%</span>
+                  {report.aiProbability.toFixed(1)}<span className="text-xl">%</span>
                 </span>
                 <span className="font-mono text-[11px] text-[#8b5cf6] font-semibold uppercase tracking-wider mt-1">
                   {report.confidenceLabel}
