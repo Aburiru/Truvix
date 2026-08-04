@@ -16,8 +16,18 @@ export default defineConfig({
             ],
         }),
         tailwindcss(),
-        react(),
+        react({
+            jsxRuntime: 'automatic', // or 'classic' depending on your React version and preference
+            include: ['**/*.tsx', '**/*.ts', '**/*.jsx', '**/*.js'],
+        }),
     ],
+    resolve: {
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+        alias: {
+            // If you have any specific aliases for your project, add them here
+            // e.g., '@': '/resources/js',
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

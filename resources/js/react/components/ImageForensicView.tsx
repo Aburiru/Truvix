@@ -1,27 +1,25 @@
 import React, { useState } from 'react';
-import { 
-  Upload, 
-  Search, 
-  Image as ImageIcon, 
-  Layers, 
-  Cpu, 
-  FileCheck2, 
-  Sparkles, 
-  Coins, 
-  Loader2, 
+import {
+  Upload,
+  Search,
+  Image as ImageIcon,
+  Layers,
+  Cpu,
+  FileCheck2,
+  Sparkles,
+  Loader2,
   X
 } from 'lucide-react';
-import { UserCredits, ViewMode, ImageForensicReport } from '../types';
+import { ViewMode, ImageForensicReport } from '../types';
 import { DEFAULT_IMAGE_REPORT, SAMPLE_IMAGE_URL } from '../data/sampleData';
 
 interface ImageForensicViewProps {
-  credits: UserCredits;
   authToken: string;
   onAnalyzeComplete: (report: ImageForensicReport) => void;
   onNavigate: (mode: ViewMode) => void;
 }
 
-export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, authToken, onAnalyzeComplete, onNavigate }) => {
+export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ authToken, onAnalyzeComplete, onNavigate }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string>('Uploaded_Image.png');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -118,11 +116,6 @@ export const ImageForensicView: React.FC<ImageForensicViewProps> = ({ credits, a
           <p className="text-sm text-[#c7c4d7] mt-1">
             Upload an image to detect AI-generated artifacts, synthetic textures, and digital manipulation.
           </p>
-        </div>
-
-        <div className="bg-[#131b2e] border border-[#334155] px-4 py-2 rounded-xl text-xs font-mono text-[#c0c1ff] flex items-center gap-2 self-start md:self-auto">
-          <Coins className="w-4 h-4 text-[#8083ff]" />
-          <span>Credits: {credits.max - credits.used}/{credits.max}</span>
         </div>
       </div>
 

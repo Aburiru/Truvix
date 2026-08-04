@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
-import { 
-  Trash2, 
-  ScanText, 
-  Zap, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Sparkles, 
-  Coins,
+import {
+  Trash2,
+  ScanText,
+  Zap,
+  ShieldCheck,
+  CheckCircle2,
+  Sparkles,
   Loader2,
   FileCheck
 } from 'lucide-react';
-import { UserCredits, ViewMode, TextScanReport } from '../types';
+import { ViewMode, TextScanReport } from '../types';
 import { SAMPLE_TEXT_AI, SAMPLE_TEXT_HUMAN } from '../data/sampleData';
 
 interface TextScanViewProps {
-  credits: UserCredits;
   authToken: string;
   onAnalyzeComplete: (report: TextScanReport) => void;
   onNavigate: (mode: ViewMode) => void;
 }
 
-export const TextScanView: React.FC<TextScanViewProps> = ({ credits, authToken, onAnalyzeComplete, onNavigate }) => {
+export const TextScanView: React.FC<TextScanViewProps> = ({ authToken, onAnalyzeComplete, onNavigate }) => {
   const [textInput, setTextInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -102,11 +100,6 @@ export const TextScanView: React.FC<TextScanViewProps> = ({ credits, authToken, 
         <div>
           <h1 className="text-3xl font-bold font-headline text-white tracking-tight">AI Text Scan</h1>
           <p className="text-sm text-[#c7c4d7] mt-1">Paste your content to detect AI generation patterns.</p>
-        </div>
-
-        <div className="bg-[#131b2e] border border-[#334155] px-4 py-2 rounded-xl text-xs font-mono text-[#c0c1ff] flex items-center gap-2 self-start md:self-auto">
-          <Coins className="w-4 h-4 text-[#8083ff]" />
-          <span>{credits.max - credits.used}/{credits.max} Credits</span>
         </div>
       </div>
 

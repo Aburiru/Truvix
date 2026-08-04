@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { 
-  Settings, 
-  Key, 
-  Zap, 
-  CheckCircle2, 
-  Coins, 
-  Sliders, 
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import {
+  Settings,
+  Key,
+  Zap,
+  CheckCircle2,
+  Coins,
+  Sliders,
   ShieldAlert,
   Sparkles
 } from 'lucide-react';
@@ -15,11 +16,47 @@ interface SettingsViewProps {
   credits: UserCredits;
   onTopUpCredits: (amount: number) => void;
   onTogglePro: () => void;
+  onCreditsUpdated: () => void; // New prop: callback to notify parent about credit update
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ credits, onTopUpCredits, onTogglePro }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ credits, onTopUpCredits, onTogglePro, onCreditsUpdated }) => {
+  const [plans, setPlans] = useState([]);
   const [sensitivity, setSensitivity] = useState(75);
   const [autoHighlight, setAutoHighlight] = useState(true);
+
+  const handlePurchase = async (planKey: string) => {
+    const order_id = 'ORDER-' + Date.now();
+    const amount = plans[planKey].price;
+
+    try {
+      const response = await axios.post('/api/payment/snap-token', { order_id, amount });
+      const snapToken = response.data.token;
+
+      if (window.snap) {
+        window.snap.pay(snapToken, {
+          onSuccess: (result: any) => {
+            console.log('success', result);
+            onCreditsUpdated(); // Notify parent about credit update
+          },
+          onPending: (result: any) => console.log('pending', result),
+          onError: (result: any) => console.log('error', result),
+        });
+      }
+    } catch (error) {
+      console.error('Payment failed', error);
+    }
+  };
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://app.midtrans.com/snap/snap.js";
+    script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY);
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   return (
     <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-8 font-body">
@@ -54,26 +91,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ credits, onTopUpCred
           </button>
         </div>
 
-        {/* Top-up Credits Simulator */}
+        {/* Subscription Plans */}
         <div className="space-y-3">
           <label className="font-mono text-xs text-[#908fa0] uppercase tracking-wider block">
-            Simulate Credit Top-Up (Demo)
+            Choose a Plan
           </label>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => onTopUpCredits(5)}
-              className="bg-[#131b2e] hover:bg-[#222a3d] border border-[#334155] text-[#c0c1ff] px-4 py-2 rounded-xl text-xs font-mono transition-colors flex items-center gap-1.5"
-            >
-              <Coins className="w-3.5 h-3.5 text-[#8083ff]" />
-              <span>+5 Credits</span>
-            </button>
-            <button
-              onClick={() => onTopUpCredits(25)}
-              className="bg-[#131b2e] hover:bg-[#222a3d] border border-[#334155] text-[#c0c1ff] px-4 py-2 rounded-xl text-xs font-mono transition-colors flex items-center gap-1.5"
-            >
-              <Coins className="w-3.5 h-3.5 text-[#8083ff]" />
-              <span>+25 Credits</span>
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Object.entries(plans).map(([key, plan]) => (
+              <div key={key} className="bg-[#131b2e] border border-[#334155] p-4 rounded-xl flex flex-col gap-2">
+                <h4 className="text-white font-semibold">{plan.name}</h4>
+                <p className="text-xs text-[#c7c4d7]">{plan.description}</p>
+                <div className="text-[#c0c1ff] font-mono font-bold">IDR {plan.price}</div>
+                <button
+                  onClick={() => handlePurchase(key)}
+                  className="bg-[#8083ff] text-white py-2 rounded-lg text-xs font-semibold hover:bg-[#6f00be] transition-colors"
+                >
+                  Buy Now
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       </div>

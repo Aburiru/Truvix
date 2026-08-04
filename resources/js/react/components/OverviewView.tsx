@@ -1,22 +1,78 @@
-import React from 'react';
-import { 
-  Zap, 
-  CheckCircle2, 
-  FileText, 
-  Image as ImageIcon, 
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import {
+  Zap,
+  CheckCircle2,
+  FileText,
+  Image as ImageIcon,
   ArrowUpRight,
   TrendingUp,
   Sparkles
 } from 'lucide-react';
-import { UserCredits, ViewMode } from '../types';
+import { ViewMode } from '../types';
 
 interface OverviewViewProps {
-  credits: UserCredits;
   onNavigate: (mode: ViewMode) => void;
-  onSubscribe: () => void;
+  refreshCreditTrigger?: number; // New prop
 }
 
-export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate, onSubscribe }) => {
+export const OverviewView: React.FC<OverviewViewProps> = ({ onNavigate, refreshCreditTrigger }) => {
+  const [credits, setCredits] = useState<any>(null); // State to hold fetched credits
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      const token = localStorage.getItem('authToken'); // Assuming token is stored as 'authToken'
+      if (token) {
+        try {
+          const response = await axios.get('/api/user/credits', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setCredits(response.data);
+        } catch (error) {
+          console.error('Failed to fetch credits in OverviewView', error);
+        }
+      } else {
+        // Handle unauthenticated state if necessary
+        setCredits({ // Default or guest credits
+          credits: 0,
+          used: 0,
+          max: 0,
+          isPro: false,
+          totalDocuments: 0,
+          totalImages: 0,
+          aiTextPercentage: 0,
+          humanTextPercentage: 0,
+          syntheticImagePercentage: 0,
+          authenticImagePercentage: 0,
+        });
+      }
+    };
+    fetchCredits();
+  }, [refreshCreditTrigger]); // Refetch when refreshCreditTrigger changes
+
+  if (!credits) {
+    return (
+      <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-8 font-body text-white">
+        Loading credits...
+      </div>
+    );
+  }
+
+  // Placeholder values for the analytics until actual data is fetched
+  const userCredits = credits.credits || 0; // The actual credits balance
+  const usedCredits = 0; // This needs to be fetched or calculated from transactions
+  const maxCredits = credits.max || 100; // Placeholder, or derived from subscription
+
+  // These percentages/counts also need to be fetched from backend or derived
+  const totalDocuments = credits.totalDocuments || 0;
+  const totalImages = credits.totalImages || 0;
+  const aiTextPercentage = credits.aiTextPercentage || 0;
+  const humanTextPercentage = credits.humanTextPercentage || 0;
+  const syntheticImagePercentage = credits.syntheticImagePercentage || 0;
+  const authenticImagePercentage = credits.authenticImagePercentage || 0;
+  const isPro = credits.isPro || false;
+
+
   return (
     <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-8 font-body">
       {/* Top Header */}
@@ -29,7 +85,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
         <div className="flex items-center gap-3">
           <div className="bg-[#131b2e] border border-[#334155] px-4 py-2 rounded-xl text-xs font-mono text-[#c0c1ff] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#8083ff]" />
-            <span>{credits.used}/{credits.max} Credits Used</span>
+            <span>{userCredits} Credits Available</span>
           </div>
           <button
             onClick={() => onNavigate('text-scan')}
@@ -49,23 +105,23 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
               CURRENT CYCLE USAGE
             </div>
             <div className="flex items-baseline gap-2 mb-2">
-              <span className="font-headline font-bold text-5xl text-white">{credits.used}</span>
-              <span className="font-headline font-medium text-2xl text-[#908fa0]">/ {credits.max} Credits Used</span>
+              <span className="font-headline font-bold text-5xl text-white">{usedCredits}</span>
+              <span className="font-headline font-medium text-2xl text-[#908fa0]">/ {maxCredits} Credits Used</span>
             </div>
             <p className="text-sm text-[#c7c4d7] max-w-md mt-2">
-              Your {credits.isPro ? 'Pro' : 'Free'} plan includes {credits.max} advanced forensic scans per cycle. Resets in 12 days.
+              Your {isPro ? 'Pro' : 'Free'} plan includes {maxCredits} advanced forensic scans per cycle. Resets in 12 days.
             </p>
           </div>
 
           <div className="mt-8 space-y-2">
             <div className="flex justify-between items-center text-xs font-mono">
               <span className="text-[#908fa0]">Plan Utilization</span>
-              <span className="text-[#8083ff] font-semibold">{Math.round((credits.used / credits.max) * 100)}% UTILIZED</span>
+              <span className="text-[#8083ff] font-semibold">{maxCredits > 0 ? Math.round((usedCredits / maxCredits) * 100) : 0}% UTILIZED</span>
             </div>
             <div className="w-full bg-[#0b1326] rounded-full h-3 overflow-hidden p-0.5 border border-[#334155]">
-              <div 
+              <div
                 className="bg-gradient-to-r from-[#8083ff] to-[#6f00be] h-full rounded-full transition-all duration-700"
-                style={{ width: `${(credits.used / credits.max) * 100}%` }}
+                style={{ width: `${maxCredits > 0 ? (usedCredits / maxCredits) * 100 : 0}%` }}
               />
             </div>
           </div>
@@ -102,11 +158,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
           </div>
 
           <button
-            onClick={onSubscribe}
+            onClick={() => onNavigate('settings')} // Navigate to settings page to manage plans
             className="w-full bg-gradient-to-r from-[#8083ff] to-[#6f00be] hover:from-[#9193ff] hover:to-[#820cd6] text-white py-3.5 rounded-xl font-semibold text-sm shadow-lg shadow-[#8083ff]/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
-            <span>{credits.isPro ? 'Manage Subscription' : 'Subscribe Now'}</span>
+            <span>{isPro ? 'Manage Subscription' : 'Subscribe Now'}</span>
           </button>
         </div>
       </div>
@@ -131,7 +187,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
 
           <div>
             <div className="font-headline font-bold text-4xl text-white mb-1">
-              {credits.totalDocuments}
+              {totalDocuments}
             </div>
             <div className="text-xs text-[#908fa0]">Documents Analyzed</div>
           </div>
@@ -143,10 +199,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
                   <span className="w-2 h-2 rounded-full bg-[#8b5cf6]" />
                   AI Generated
                 </span>
-                <span className="text-white font-semibold">{credits.aiTextPercentage}%</span>
+                <span className="text-white font-semibold">{aiTextPercentage}%</span>
               </div>
               <div className="w-full bg-[#0b1326] rounded-full h-2 overflow-hidden">
-                <div className="bg-[#8b5cf6] h-full rounded-full" style={{ width: `${credits.aiTextPercentage}%` }} />
+                <div className="bg-[#8b5cf6] h-full rounded-full" style={{ width: `${aiTextPercentage}%` }} />
               </div>
             </div>
 
@@ -156,15 +212,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
                   <span className="w-2 h-2 rounded-full bg-[#10b981]" />
                   Human Authored
                 </span>
-                <span className="text-white font-semibold">{credits.humanTextPercentage}%</span>
+                <span className="text-white font-semibold">{humanTextPercentage}%</span>
               </div>
               <div className="w-full bg-[#0b1326] rounded-full h-2 overflow-hidden">
-                <div className="bg-[#10b981] h-full rounded-full" style={{ width: `${credits.humanTextPercentage}%` }} />
+                <div className="bg-[#10b981] h-full rounded-full" style={{ width: `${humanTextPercentage}%` }} />
               </div>
             </div>
           </div>
 
-          <button 
+          <button
             onClick={() => onNavigate('text-scan')}
             className="w-full text-center text-xs font-mono text-[#c0c1ff] hover:text-white pt-2 border-t border-[#334155]/40 flex items-center justify-center gap-1 group"
           >
@@ -191,7 +247,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
 
           <div>
             <div className="font-headline font-bold text-4xl text-white mb-1">
-              {credits.totalImages}
+              {totalImages}
             </div>
             <div className="text-xs text-[#908fa0]">Images Processed</div>
           </div>
@@ -203,10 +259,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
                   <span className="w-2 h-2 rounded-full bg-[#8b5cf6]" />
                   Synthetically Generated
                 </span>
-                <span className="text-white font-semibold">{credits.syntheticImagePercentage}%</span>
+                <span className="text-white font-semibold">{syntheticImagePercentage}%</span>
               </div>
               <div className="w-full bg-[#0b1326] rounded-full h-2 overflow-hidden">
-                <div className="bg-[#8b5cf6] h-full rounded-full" style={{ width: `${credits.syntheticImagePercentage}%` }} />
+                <div className="bg-[#8b5cf6] h-full rounded-full" style={{ width: `${syntheticImagePercentage}%` }} />
               </div>
             </div>
 
@@ -216,15 +272,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ credits, onNavigate,
                   <span className="w-2 h-2 rounded-full bg-[#10b981]" />
                   Authentic
                 </span>
-                <span className="text-white font-semibold">{credits.authenticImagePercentage}%</span>
+                <span className="text-white font-semibold">{authenticImagePercentage}%</span>
               </div>
               <div className="w-full bg-[#0b1326] rounded-full h-2 overflow-hidden">
-                <div className="bg-[#10b981] h-full rounded-full" style={{ width: `${credits.authenticImagePercentage}%` }} />
+                <div className="bg-[#10b981] h-full rounded-full" style={{ width: `${authenticImagePercentage}%` }} />
               </div>
             </div>
           </div>
 
-          <button 
+          <button
             onClick={() => onNavigate('image-forensic')}
             className="w-full text-center text-xs font-mono text-[#c0c1ff] hover:text-white pt-2 border-t border-[#334155]/40 flex items-center justify-center gap-1 group"
           >

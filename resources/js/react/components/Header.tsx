@@ -1,12 +1,14 @@
 import React from 'react';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
 import { ViewMode } from '../types';
+import { CreditDisplay } from './CreditDisplay';
 
 interface HeaderProps {
   onNavigate: (mode: ViewMode) => void;
+  refreshCreditTrigger?: number; // Add this prop
 }
 
-export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
+export const Header: React.FC<HeaderProps> = ({ onNavigate, refreshCreditTrigger }) => {
   return (
     <header className="bg-[#0b1326]/90 backdrop-blur-xl sticky top-0 z-50 border-b border-[#464554]/30 flex justify-between items-center px-6 lg:px-20 py-4 w-full">
       <div 
@@ -49,6 +51,7 @@ export const Header: React.FC<HeaderProps> = ({ onNavigate }) => {
       </nav>
 
       <div className="flex items-center gap-3">
+        <CreditDisplay refreshTrigger={refreshCreditTrigger} />
         <button 
           onClick={() => onNavigate('login')}
           className="text-[#c7c4d7] hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors hidden md:block"

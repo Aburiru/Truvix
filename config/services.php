@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    'slack' => [
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
+    ],
+
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+        'snap_url' => env('MIDTRANS_SNAP_URL', 'https://app.midtrans.com/snap/v1'),
+        'api_url' => env('MIDTRANS_API_URL', 'https://api.midtrans.com/v2'),
+    ],
 ];

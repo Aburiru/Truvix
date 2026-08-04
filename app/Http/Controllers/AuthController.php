@@ -54,4 +54,9 @@ class AuthController extends Controller
         Auth::user()->tokens()->delete();
         return response()->json(['message' => 'Logged out']);
     }
+
+    public function getUserCredits(Request $request)
+    {
+        return response()->json(['credits' => $request->user()->credits]);
+    }
 }
